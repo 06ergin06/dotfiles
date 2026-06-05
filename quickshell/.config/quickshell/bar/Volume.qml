@@ -10,7 +10,6 @@ Item {
     implicitHeight: row.implicitHeight
 
     property var barWindow: null
-
     property real sinkVolume: 0
     property bool sinkMuted: false
     property real sourceVolume: 0
@@ -27,9 +26,7 @@ Item {
     }
 
     Timer {
-        interval: 10000
-        running: true
-        repeat: true
+        interval: 10000; running: true; repeat: true
         onTriggered: {
             sinkPoll.running = true
             srcPoll.running = true
@@ -37,13 +34,21 @@ Item {
         }
     }
 
-    function refreshVolume() {
-        sinkPoll.running = true
-        srcPoll.running = true
-    }
+    function refreshVolume() { sinkPoll.running = true; srcPoll.running = true }
+    function refreshStatus() { statusPoll.running = true }
 
-    function refreshStatus() {
-        statusPoll.running = true
+    function pollDevice(proc, volProp, mutedProp, sliderRef) {
+        return {
+            proc: proc,
+            onFinished: function(text) {
+                var match = text.match(/Volume:\s*([\d.]+)/)
+                if (match) {
+                    root[volProp] = parseFloat(match[1])
+                    if (!sliderRef.dragging) sliderRef.sliderValue = root[volProp]
+                }
+                root[mutedProp] = text.includes("MUTED")
+            }
+        }
     }
 
     Process {
@@ -86,17 +91,10 @@ Item {
     Process {
         id: statusPoll
         command: ["wpctl", "status"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.parseDevices(this.text)
-            }
-        }
+        stdout: StdioCollector { onStreamFinished: root.parseDevices(this.text) }
     }
 
-    Component.onCompleted: {
-        sinkPoll.running = true
-        srcPoll.running = true
-    }
+    Component.onCompleted: { sinkPoll.running = true; srcPoll.running = true }
 
     function setSinkVolume(v) {
         sinkVolume = v
@@ -124,48 +122,41 @@ Item {
 
     function parseDevices(text) {
         var lines = text.split('\n')
-        var sinks = []
-        var sources = []
-        var section = ""
-
+        var sinks = [], sources = [], section = ""
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i]
-
             if (line.indexOf('├─ Sinks:') >= 0) { section = "sinks"; continue }
             if (line.indexOf('├─ Sources:') >= 0) { section = "sources"; continue }
             if (line.indexOf('├─ Filters:') >= 0) { section = "filters"; continue }
             if (line.match(/^\s*[├└]─/)) { section = ""; continue }
+            if (section === "") continue
 
-            if (section !== "") {
-                var match = line.match(/│\s+(\*)?\s*(\d+)\.\s+(.+)/)
-                if (match) {
-                    var rawName = match[3].trim()
-                    var displayName = rawName.replace(/\s*\[.*/, '').trim()
-                    var id = parseInt(match[2])
-                    var isDefault = match[1] === '*'
+            var match = line.match(/│\s+(\*)?\s*(\d+)\.\s+(.+)/)
+            if (!match) continue
+            var rawName = match[3].trim()
+            var displayName = rawName.replace(/\s*\[.*/, '').trim()
+            var id = parseInt(match[2])
+            var isDefault = match[1] === '*'
 
-                    if (section === "sinks") {
-                        sinks.push({ id: id, name: displayName, isDefault: isDefault })
-                        if (isDefault) root.sinkDefaultName = displayName
-                    } else if (section === "sources") {
-                        sources.push({ id: id, name: displayName, isDefault: isDefault })
-                        if (isDefault) root.sourceDefaultName = displayName
-                    } else if (section === "filters") {
-                        var isSource = rawName.indexOf('Audio/Source') >= 0
-                        if (isSource) {
-                            var cleanName = displayName
-                                .replace(/[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}/, '')
-                                .replace(/^[._]+/, '')
-                            if (cleanName.indexOf('bluez') === 0) cleanName = "Bluetooth Headset"
-                            var sourceName = cleanName + " (Mic)"
-                            sources.push({ id: id, name: sourceName, isDefault: isDefault })
-                            if (isDefault) root.sourceDefaultName = sourceName
-                        }
-                    }
+            if (section === "sinks") {
+                sinks.push({ id: id, name: displayName, isDefault: isDefault })
+                if (isDefault) root.sinkDefaultName = displayName
+            } else if (section === "sources") {
+                sources.push({ id: id, name: displayName, isDefault: isDefault })
+                if (isDefault) root.sourceDefaultName = displayName
+            } else if (section === "filters") {
+                var isSource = rawName.indexOf('Audio/Source') >= 0
+                if (isSource) {
+                    var cleanName = displayName
+                        .replace(/[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}/, '')
+                        .replace(/^[._]+/, '')
+                    if (cleanName.indexOf('bluez') === 0) cleanName = "Bluetooth Headset"
+                    var sourceName = cleanName + " (Mic)"
+                    sources.push({ id: id, name: sourceName, isDefault: isDefault })
+                    if (isDefault) root.sourceDefaultName = sourceName
                 }
             }
         }
-
         root.sinkList = sinks
         root.sourceList = sources
     }
@@ -174,14 +165,10 @@ Item {
         id: row
         anchors.fill: parent
         spacing: 4
-
         Text {
             text: root.icon
-            font.pixelSize: 16
-            font.family: "MesloLGMDZ Nerd Font"
-            color: Theme.fg
+            font.pixelSize: 16; font.family: "MesloLGMDZ Nerd Font"; color: Theme.fg
         }
-
         Text {
             text: sinkMuted ? "Mute" : Math.round(sinkVolume * 100) + "%"
             font.pixelSize: 12
@@ -204,13 +191,9 @@ Item {
 
     Item {
         id: anchorPoint
-        x: -40
-        y: root.height + 20
-        width: root.width
-        height: 1
+        x: -40; y: root.height + 20; width: root.width; height: 1
     }
 
-    // ── Popup ────────────────────────────────────────
     PopupWindow {
         id: volMenu
         visible: false
@@ -225,56 +208,32 @@ Item {
 
         color: "transparent"
 
-        Rectangle {
-            anchors.fill: parent
-            focus: true
+        PopupContent {
+            popupWindow: volMenu
 
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    volMenu.visible = false
-                    event.accepted = true
-                }
-            }
+            Flickable {
+                anchors.fill: parent
+                anchors.margins: 12
+                contentHeight: contentColumn.height
 
-            onActiveFocusChanged: {
-                if (!activeFocus && volMenu.visible) {
-                    volMenu.visible = false
-                }
-            }
-
-            color: Theme.background
-            radius: Theme.barRadius
-            border.color: Theme.border
-            border.width: 1
-
-                Flickable {
-                    anchors.fill: parent
-                    anchors.margins: 12
-                    contentHeight: contentColumn.height
-
-                    ColumnLayout {
+                ColumnLayout {
                     id: contentColumn
                     width: parent.width
                     spacing: 8
 
                     Text {
                         text: "Output" + (sinkDefaultName ? ": " + sinkDefaultName : "")
-                        font.pixelSize: 11
-                        color: Theme.fgMuted
-                        elide: Text.ElideRight
+                        font.pixelSize: 11; color: Theme.fgMuted; elide: Text.ElideRight
                     }
 
                     RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
+                        Layout.fillWidth: true; spacing: 8
 
                         Text {
                             text: root.icon
-                            font.pixelSize: 18
-                            font.family: "MesloLGMDZ Nerd Font"
+                            font.pixelSize: 18; font.family: "MesloLGMDZ Nerd Font"
                             color: sinkMuted ? Theme.error : Theme.fg
-                            Layout.preferredWidth: 22
-                            horizontalAlignment: Text.AlignHCenter
+                            Layout.preferredWidth: 22; horizontalAlignment: Text.AlignHCenter
                         }
 
                         SliderBar {
@@ -286,20 +245,16 @@ Item {
                         }
 
                         Rectangle {
-                            width: 40
-                            height: 24
-                            radius: 4
+                            width: 40; height: 24; radius: 4
                             color: sinkMuted ? "#333333" : Theme.surface
                             border.color: sinkMuted ? Theme.error : "transparent"
                             border.width: sinkMuted ? 1 : 0
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Mute"
-                                font.pixelSize: 10
+                                text: "Mute"; font.pixelSize: 10
                                 color: sinkMuted ? Theme.error : Theme.fg
                             }
-
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
@@ -310,50 +265,27 @@ Item {
 
                     Repeater {
                         model: sinkList
-
                         delegate: Rectangle {
                             required property var modelData
-                            width: parent.width
-                            height: 28
-                            radius: 4
-
+                            width: parent.width; height: 28; radius: 4
                             color: modelData.isDefault ? Theme.surfaceVariant : "transparent"
 
                             RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 6
-                                spacing: 6
-
+                                anchors.fill: parent; anchors.margins: 6; spacing: 6
                                 Rectangle {
-                                    width: 6
-                                    height: 6
-                                    radius: 3
+                                    width: 6; height: 6; radius: 3
                                     color: modelData.isDefault ? Theme.accent : "transparent"
                                     Layout.alignment: Qt.AlignVCenter
                                 }
-
                                 Text {
                                     Layout.fillWidth: true
                                     text: modelData.name
-                                    font.pixelSize: 11
-                                    color: Theme.fg
-                                    elide: Text.ElideRight
+                                    font.pixelSize: 11; color: Theme.fg; elide: Text.ElideRight
                                 }
-
                                 Rectangle {
-                                    width: 32
-                                    height: 16
-                                    radius: 3
-                                    visible: !modelData.isDefault
-                                    color: Theme.surface
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "Use"
-                                        font.pixelSize: 9
-                                        color: Theme.fg
-                                    }
-
+                                    width: 32; height: 16; radius: 3
+                                    visible: !modelData.isDefault; color: Theme.surface
+                                    Text { anchors.centerIn: parent; text: "Use"; font.pixelSize: 9; color: Theme.fg }
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -367,27 +299,19 @@ Item {
                         }
                     }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 1
-                        color: Theme.surface
-                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
 
                     Text {
                         text: "Input" + (sourceDefaultName ? ": " + sourceDefaultName : "")
-                        font.pixelSize: 11
-                        color: Theme.fgMuted
-                        elide: Text.ElideRight
+                        font.pixelSize: 11; color: Theme.fgMuted; elide: Text.ElideRight
                     }
 
                     RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
+                        Layout.fillWidth: true; spacing: 8
 
                         Text {
                             text: ""
-                            font.pixelSize: 16
-                            font.family: "MesloLGMDZ Nerd Font"
+                            font.pixelSize: 16; font.family: "MesloLGMDZ Nerd Font"
                             color: sourceMuted ? Theme.error : Theme.fg
                         }
 
@@ -400,9 +324,7 @@ Item {
                         }
 
                         Rectangle {
-                            width: 50
-                            height: 24
-                            radius: 4
+                            width: 50; height: 24; radius: 4
                             color: sourceMuted ? "#33F38BA8" : Theme.surface
 
                             Text {
@@ -411,7 +333,6 @@ Item {
                                 font.pixelSize: 10
                                 color: sourceMuted ? "#F38BA8" : Theme.fg
                             }
-
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
@@ -422,50 +343,27 @@ Item {
 
                     Repeater {
                         model: sourceList
-
                         delegate: Rectangle {
                             required property var modelData
-                            width: parent.width
-                            height: 28
-                            radius: 4
-
+                            width: parent.width; height: 28; radius: 4
                             color: modelData.isDefault ? Theme.surfaceVariant : "transparent"
 
                             RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 6
-                                spacing: 6
-
+                                anchors.fill: parent; anchors.margins: 6; spacing: 6
                                 Rectangle {
-                                    width: 6
-                                    height: 6
-                                    radius: 3
+                                    width: 6; height: 6; radius: 3
                                     color: modelData.isDefault ? Theme.accent : "transparent"
                                     Layout.alignment: Qt.AlignVCenter
                                 }
-
                                 Text {
                                     Layout.fillWidth: true
                                     text: modelData.name
-                                    font.pixelSize: 11
-                                    color: Theme.fg
-                                    elide: Text.ElideRight
+                                    font.pixelSize: 11; color: Theme.fg; elide: Text.ElideRight
                                 }
-
                                 Rectangle {
-                                    width: 32
-                                    height: 16
-                                    radius: 3
-                                    visible: !modelData.isDefault
-                                    color: Theme.surface
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "Use"
-                                        font.pixelSize: 9
-                                        color: Theme.fg
-                                    }
-
+                                    width: 32; height: 16; radius: 3
+                                    visible: !modelData.isDefault; color: Theme.surface
+                                    Text { anchors.centerIn: parent; text: "Use"; font.pixelSize: 9; color: Theme.fg }
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor

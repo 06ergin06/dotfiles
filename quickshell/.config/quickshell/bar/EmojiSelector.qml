@@ -2,15 +2,11 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import "EmojiNames.js" as EmojiData
 
 Item {
     id: root
-
-    property var barWindow: null
-    property bool emojiVisible: emojiOverlay.visible
 
     property var emojis: [
         {
@@ -88,153 +84,106 @@ Item {
     function insertEmoji(emoji) {
         Quickshell.execDetached(["sh", "-c", 'wl-copy "' + emoji + '" && wtype -M ctrl v && wtype -M shift Insert']);
         searchText = "";
-        emojiOverlay.visible = false;
+        overlay.visible = false;
     }
 
-    PanelWindow {
-        id: emojiOverlay
-        visible: false
+    OverlayWindow {
+        id: overlay
 
-        anchors.top: true
-        anchors.bottom: true
-        anchors.left: true
-        anchors.right: true
-
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-
-        color: "#80000000"
-
-        Item {
-            anchors.fill: parent
-            focus: visible
-
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) {
-                    emojiOverlay.visible = false;
-                    event.accepted = true;
-                }
-            }
+        Rectangle {
+            id: emojiPopup
+            implicitWidth: 380
+            implicitHeight: 420
+            radius: Theme.barRadius
+            color: Theme.background
+            anchors.centerIn: parent
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: emojiOverlay.visible = false
+                onClicked: mouse => mouse.accepted = true
             }
 
-            Rectangle {
-                id: emojiPopup
-                implicitWidth: 380
-                implicitHeight: 420
-                radius: Theme.barRadius
-                color: Theme.background
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 6
 
-                anchors.centerIn: parent
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: mouse => mouse.accepted = true
+                TextField {
+                    id: searchField
+                    Layout.fillWidth: true
+                    height: 28
+                    topPadding: 8; bottomPadding: 8; leftPadding: 8; rightPadding: 8
+                    placeholderText: "Search emoji..."
+                    color: Theme.fg
+                    placeholderTextColor: Theme.fgMuted
+                    font.pixelSize: 12
+                    background: Rectangle { radius: 6; color: Theme.surface }
+                    onTextChanged: root.searchText = text
                 }
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 6
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 3
 
-                    TextField {
-                        id: searchField
-                        Layout.fillWidth: true
-                        height: 28
-                        topPadding: 8
-                        bottomPadding: 8
-                        leftPadding: 8
-                        rightPadding: 8
-                        placeholderText: "Search emoji..."
-                        color: Theme.fg
-                        placeholderTextColor: Theme.fgMuted
-                        font.pixelSize: 12
-                        background: Rectangle {
-                            radius: 6
-                            color: Theme.surface
-                        }
-                        onTextChanged: root.searchText = text
-                    }
+                    Repeater {
+                        model: root.emojis
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 3
+                        delegate: Rectangle {
+                            required property var modelData
+                            required property int index
 
-                        Repeater {
-                            model: root.emojis
+                            height: 24; width: 32; radius: 6
+                            color: root.currentCat === modelData.cat ? Theme.accent : Theme.surface
 
-                            delegate: Rectangle {
-                                required property var modelData
-                                required property int index
+                            Text { anchors.centerIn: parent; text: modelData.list[0]; font.pixelSize: 14 }
 
-                                height: 24
-                                width: 32
-                                radius: 6
-                                color: root.currentCat === modelData.cat ? Theme.accent : Theme.surface
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: modelData.list[0]
-                                    font.pixelSize: 14
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.currentCat = modelData.cat;
-                                        root.searchText = searchField.text;
-                                    }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.currentCat = modelData.cat;
+                                    root.searchText = searchField.text;
                                 }
                             }
                         }
                     }
+                }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: 6
-                        color: Theme.surface
-                        clip: true
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    radius: 6
+                    color: Theme.surface
+                    clip: true
 
-                        Flickable {
-                            anchors.fill: parent
-                            anchors.margins: 4
-                            contentHeight: grid.implicitHeight
-                            contentWidth: grid.implicitWidth
+                    Flickable {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        contentHeight: grid.implicitHeight
+                        contentWidth: grid.implicitWidth
 
-                            Grid {
-                                id: grid
-                                columns: 8
-                                spacing: 2
+                        Grid {
+                            id: grid
+                            columns: 8
+                            spacing: 2
 
-                                Repeater {
-                                    model: root.filteredList
+                            Repeater {
+                                model: root.filteredList
 
-                                    delegate: Rectangle {
-                                        required property var modelData
+                                delegate: Rectangle {
+                                    required property var modelData
 
-                                        width: 38
-                                        height: 38
-                                        radius: 6
-                                        color: ma.containsMouse ? Theme.surfaceVariant : "transparent"
+                                    width: 38; height: 38; radius: 6
+                                    color: ma.containsMouse ? Theme.surfaceVariant : "transparent"
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: modelData
-                                            font.pixelSize: 22
-                                        }
+                                    Text { anchors.centerIn: parent; text: modelData; font.pixelSize: 22 }
 
-                                        MouseArea {
-                                            id: ma
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: root.insertEmoji(modelData)
-                                        }
+                                    MouseArea {
+                                        id: ma
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.insertEmoji(modelData)
                                     }
                                 }
                             }
@@ -252,8 +201,8 @@ Item {
     }
 
     function toggle() {
-        emojiOverlay.visible = !emojiOverlay.visible;
-        if (emojiOverlay.visible)
+        overlay.visible = !overlay.visible;
+        if (overlay.visible)
             searchField.forceActiveFocus();
     }
 }

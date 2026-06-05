@@ -10,7 +10,6 @@ Item {
     implicitHeight: row.implicitHeight
 
     property var barWindow: null
-
     property real brightness: 0
     property int brightnessMax: 100
     property int kbdBacklight: 0
@@ -19,11 +18,8 @@ Item {
     property int nlTemp: 4000
 
     function refreshBrightness() {
-        if (brightnessMax > 100) {
-            brightnessPoll.running = true
-        } else {
-            brightnessMaxPoll.running = true
-        }
+        if (brightnessMax > 100) brightnessPoll.running = true
+        else brightnessMaxPoll.running = true
     }
 
     Process {
@@ -64,37 +60,27 @@ Item {
 
     Process { id: kbdSet; command: ["true"] }
 
-    // Night Light
     Process {
         id: nlCheck
         command: ["hyprctl", "getoption", "decoration:screen_shader"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                nlActive = this.text.indexOf("nightlight.frag") >= 0
-            }
+            onStreamFinished: nlActive = this.text.indexOf("nightlight.frag") >= 0
         }
     }
 
     function nlToggle() {
-        if (nlActive) {
-            Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh"])
-        } else {
-            Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(nlTemp)])
-        }
+        Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh"].concat(nlActive ? [] : [String(nlTemp)]))
         nlStatusTimer.start()
     }
 
     function nlSetTemp(t) {
         nlTemp = t
-        if (nlActive) {
-            Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(t)])
-        }
+        if (nlActive) Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(t)])
     }
 
     Timer {
         id: nlStatusTimer
-        interval: 300
-        repeat: false
+        interval: 300; repeat: false
         onTriggered: nlCheck.running = true
     }
 
@@ -121,11 +107,9 @@ Item {
             font.pixelSize: 16
             color: root.nlActive ? "#f9e2af" : Theme.fg
         }
-
         Text {
             text: Math.round(brightness * 100) + "%"
-            font.pixelSize: 12
-            color: Theme.fg
+            font.pixelSize: 12; color: Theme.fg
         }
     }
 
@@ -144,10 +128,7 @@ Item {
 
     Item {
         id: anchorPoint
-        x: -20
-        y: root.height + 20
-        width: root.width
-        height: 1
+        x: -20; y: root.height + 20; width: root.width; height: 1
     }
 
     PopupWindow {
@@ -164,26 +145,8 @@ Item {
 
         color: "transparent"
 
-        Rectangle {
-            anchors.fill: parent
-            color: Theme.background
-            radius: Theme.barRadius
-            border.color: Theme.border
-            border.width: 1
-            focus: true
-
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    popup.visible = false
-                    event.accepted = true
-                }
-            }
-
-            onActiveFocusChanged: {
-                if (!activeFocus && popup.visible) {
-                    popup.visible = false
-                }
-            }
+        PopupContent {
+            popupWindow: popup
 
             Flickable {
                 anchors.fill: parent
@@ -195,62 +158,36 @@ Item {
                     width: parent.width
                     spacing: 8
 
-                    Text {
-                        text: "Brightness"
-                        font.pixelSize: 11
-                        color: Theme.fgMuted
-                    }
+                    Text { text: "Brightness"; font.pixelSize: 11; color: Theme.fgMuted }
 
                     RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
+                        Layout.fillWidth: true; spacing: 8
 
-                        Text {
-                            text: ""
-                            font.pixelSize: 16
-                            color: Theme.fg
-                        }
+                        Text { text: ""; font.pixelSize: 16; color: Theme.fg }
 
                         SliderBar {
                             Layout.fillWidth: true
                             sliderValue: root.brightness
                             trackColor: Theme.accent
-                            onMoved: {
-                                root.setBrightness(sliderValue)
-                                brightnessPoll.running = true
-                            }
+                            onMoved: { root.setBrightness(sliderValue); brightnessPoll.running = true }
                         }
 
                         Text {
                             text: Math.round(root.brightness * 100) + "%"
-                            font.pixelSize: 10
-                            color: Theme.fg
+                            font.pixelSize: 10; color: Theme.fg
                             horizontalAlignment: Text.AlignRight
                             Layout.preferredWidth: 30
                         }
                     }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 1
-                        color: Theme.surface
-                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
 
-                    Text {
-                        text: "Keyboard Backlight"
-                        font.pixelSize: 11
-                        color: Theme.fgMuted
-                    }
+                    Text { text: "Keyboard Backlight"; font.pixelSize: 11; color: Theme.fgMuted }
 
                     RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
+                        Layout.fillWidth: true; spacing: 8
 
-                        Text {
-                            text: ""
-                            font.pixelSize: 16
-                            color: Theme.fg
-                        }
+                        Text { text: ""; font.pixelSize: 16; color: Theme.fg }
 
                         SliderBar {
                             Layout.fillWidth: true
@@ -265,46 +202,28 @@ Item {
 
                         Text {
                             text: Math.round(root.kbdBacklight / root.kbdBacklightMax * 100) + "%"
-                            font.pixelSize: 10
-                            color: Theme.fg
+                            font.pixelSize: 10; color: Theme.fg
                             horizontalAlignment: Text.AlignRight
                             Layout.preferredWidth: 30
                         }
                     }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 1
-                        color: Theme.surface
-                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
 
                     RowLayout {
                         Layout.fillWidth: true
 
-                        Text {
-                            text: "Night Light"
-                            font.pixelSize: 11
-                            color: Theme.fgMuted
-                        }
-
+                        Text { text: "Night Light"; font.pixelSize: 11; color: Theme.fgMuted }
                         Item { Layout.fillWidth: true }
 
                         Rectangle {
-                            height: 20
-                            width: 36
-                            radius: 10
+                            height: 20; width: 36; radius: 10
                             color: root.nlActive ? Theme.accent : "#555555"
-
                             Behavior on color { ColorAnimation { duration: 150 } }
 
                             Rectangle {
-                                width: 16
-                                height: 16
-                                radius: 8
-                                color: "#FFFFFF"
-                                x: root.nlActive ? parent.width - width - 2 : 2
-                                y: 2
-
+                                width: 16; height: 16; radius: 8; color: "#FFFFFF"
+                                x: root.nlActive ? parent.width - width - 2 : 2; y: 2
                                 Behavior on x { NumberAnimation { duration: 150 } }
                             }
 
@@ -316,15 +235,10 @@ Item {
                     }
 
                     RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
+                        Layout.fillWidth: true; spacing: 8
                         visible: root.nlActive
 
-                        Text {
-                            text: "\u2600\uFE0F"
-                            font.pixelSize: 12
-                            color: Theme.fgMuted
-                        }
+                        Text { text: "\u2600\uFE0F"; font.pixelSize: 12; color: Theme.fgMuted }
 
                         SliderBar {
                             Layout.fillWidth: true
@@ -336,18 +250,13 @@ Item {
                             }
                         }
 
-                        Text {
-                            text: "\uD83C\uDF19"
-                            font.pixelSize: 12
-                            color: Theme.fgMuted
-                        }
+                        Text { text: "\uD83C\uDF19"; font.pixelSize: 12; color: Theme.fgMuted }
                     }
 
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: root.nlActive ? root.nlTemp + "K" : ""
-                        font.pixelSize: 10
-                        color: Theme.fgMuted
+                        font.pixelSize: 10; color: Theme.fgMuted
                         visible: root.nlActive
                     }
                 }
@@ -355,7 +264,5 @@ Item {
         }
     }
 
-    Component.onCompleted: {
-        brightnessMaxPoll.running = true
-    }
+    Component.onCompleted: brightnessMaxPoll.running = true
 }

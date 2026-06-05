@@ -10,7 +10,6 @@ Item {
 
     property var barWindow: null
     property var devices: []
-    property string selectedDevice: ""
     implicitWidth: barIcon.implicitWidth
     implicitHeight: barIcon.implicitHeight
 
@@ -23,11 +22,8 @@ Item {
     }
 
     readonly property string icon: connectedCount > 0 ? "" : ""
-    readonly property color iconColor: Theme.fg
 
-    function refreshDevices() {
-        listDevices.running = true
-    }
+    function refreshDevices() { listDevices.running = true }
 
     Process {
         id: listDevices
@@ -39,24 +35,17 @@ Item {
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i]
                     if (line.match(/^\d+ device/) || line.includes("No devices")) continue
-
                     var name = "", id = "", statusText = ""
                     var match = line.match(/^- (.+?): (.+?) on /)
-                    if (match) {
-                        name = match[1].trim()
-                        id = match[2].trim()
-                    }
+                    if (match) { name = match[1].trim(); id = match[2].trim() }
                     var parMatch = line.match(/\((.+)\)$/)
                     if (parMatch) statusText = parMatch[1]
                     if (name !== "" && id !== "") {
                         result.push({
-                            name: name,
-                            id: id,
-                            status: statusText,
+                            name: name, id: id, status: statusText,
                             isReachable: statusText.includes("reachable"),
-                            isPaired: statusText.includes("paired") || statusText.includes("paired"),
-                            battery: "",
-                            batteryLow: false
+                            isPaired: statusText.includes("paired"),
+                            battery: "", batteryLow: false
                         })
                     }
                 }
@@ -65,9 +54,7 @@ Item {
             }
         }
         stderr: StdioCollector {
-            onStreamFinished: {
-                if (text.trim() !== "") console.warn("kdeconnect-cli stderr:", text)
-            }
+            onStreamFinished: { if (text.trim() !== "") console.warn("kdeconnect-cli stderr:", text) }
         }
     }
 
@@ -77,17 +64,13 @@ Item {
     function fetchAllBattery() {
         _deviceBackup = devices.slice()
         _batteryQueue = []
-        for (var i = 0; i < devices.length; i++) {
+        for (var i = 0; i < devices.length; i++)
             _batteryQueue.push({ deviceId: devices[i].id, index: i })
-        }
         fetchNextBattery()
     }
 
     function fetchNextBattery() {
-        if (_batteryQueue.length === 0) {
-            root.devices = _deviceBackup
-            return
-        }
+        if (_batteryQueue.length === 0) { root.devices = _deviceBackup; return }
         var next = _batteryQueue[0]
         getBatteryProc.command = ["sh", "-c", "kdeconnect-cli --device \"" + next.deviceId + "\" --battery 2>/dev/null | head -5"]
         getBatteryProc.running = true
@@ -111,12 +94,8 @@ Item {
     Process {
         id: getBatteryProc
         command: ["true"]
-        stdout: StdioCollector {
-            onStreamFinished: root.onBatteryResult(text)
-        }
-        stderr: StdioCollector {
-            onStreamFinished: root.onBatteryResult("")
-        }
+        stdout: StdioCollector { onStreamFinished: root.onBatteryResult(text) }
+        stderr: StdioCollector { onStreamFinished: root.onBatteryResult("") }
     }
 
     function sendFile(deviceId) {
@@ -131,32 +110,23 @@ Item {
         ])
     }
 
-    function pingDevice(deviceId) {
-        Quickshell.execDetached(["kdeconnect-cli", "--device", deviceId, "--ping"])
-    }
+    function pingDevice(deviceId) { Quickshell.execDetached(["kdeconnect-cli", "--device", deviceId, "--ping"]) }
 
-    function browseDevice(deviceId) {
-        Quickshell.execDetached(["kdeconnect-cli", "--device", deviceId, "--list-notifications"])
-    }
+    function browseDevice(deviceId) { Quickshell.execDetached(["kdeconnect-cli", "--device", deviceId, "--list-notifications"]) }
 
     Component.onCompleted: refreshDevices()
 
-    // Bar icon
     Text {
         id: barIcon
         anchors.centerIn: parent
         text: root.icon
         font.pixelSize: 14
-        color: root.iconColor
-
+        color: Theme.fg
     }
 
     Item {
         id: anchorPoint
-        x: -80
-        y: root.height + 16
-        width: root.width
-        height: 1
+        x: -80; y: root.height + 16; width: root.width; height: 1
     }
 
     PopupWindow {
@@ -173,51 +143,20 @@ Item {
 
         color: "transparent"
 
-        Rectangle {
-            anchors.fill: parent
-            color: Theme.background
-            radius: Theme.barRadius
-            border.color: Theme.border
-            border.width: 1
-            focus: true
-
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    kdePopup.visible = false
-                    event.accepted = true
-                }
-            }
-
-            onActiveFocusChanged: {
-                if (!activeFocus && kdePopup.visible) {
-                    kdePopup.visible = false
-                }
-            }
+        PopupContent {
+            popupWindow: kdePopup
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 8
                 spacing: 6
 
-                // Header
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 6
 
-                    Text {
-                        text: root.icon
-                        font.pixelSize: 16
-                        color: root.iconColor
-                    }
-
-                    Text {
-                        text: "KDE Connect"
-                        font.pixelSize: 13
-                        font.bold: true
-                        color: Theme.fg
-                        Layout.fillWidth: true
-                    }
-
+                    Text { text: root.icon; font.pixelSize: 16; color: Theme.fg }
+                    Text { text: "KDE Connect"; font.pixelSize: 13; font.bold: true; color: Theme.fg; Layout.fillWidth: true }
                     Text {
                         text: connectedCount > 0 ? connectedCount + " connected" : "No devices"
                         font.pixelSize: 10
@@ -225,13 +164,8 @@ Item {
                     }
                 }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: Theme.surface
-                }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
 
-                // Device list
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -268,17 +202,11 @@ Item {
                                         font.pixelSize: 14
                                         color: modelData.isReachable ? Theme.accent : Theme.fgMuted
                                     }
-
                                     Text {
                                         text: modelData.name
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                        color: Theme.fg
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
+                                        font.pixelSize: 12; font.bold: true; color: Theme.fg
+                                        Layout.fillWidth: true; elide: Text.ElideRight
                                     }
-
-                                    // Battery
                                     Text {
                                         text: modelData.battery
                                         font.pixelSize: 10
@@ -292,84 +220,42 @@ Item {
                                     spacing: 4
 
                                     Rectangle {
-                                        height: 20
-                                        width: 40
-                                        radius: 4
-                                        color: Theme.background
+                                        height: 20; width: 40; radius: 4; color: Theme.background
                                         visible: modelData.isReachable
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: ""
-                                            font.pixelSize: 10
-                                            color: Theme.fg
-                                        }
-
+                                        Text { anchors.centerIn: parent; text: ""; font.pixelSize: 10; color: Theme.fg }
                                         MouseArea {
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: root.pingDevice(modelData.id)
                                         }
-
-                                        ToolTip {
-                                            visible: ma.containsMouse && modelData.isReachable
-                                            text: "Ping device"
-                                            delay: 800
-                                        }
+                                        ToolTip { visible: ma.containsMouse && modelData.isReachable; text: "Ping device"; delay: 800 }
                                     }
 
                                     Rectangle {
-                                        height: 20
-                                        width: 40
-                                        radius: 4
-                                        color: Theme.background
+                                        height: 20; width: 40; radius: 4; color: Theme.background
                                         visible: modelData.isReachable
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: ""
-                                            font.pixelSize: 10
-                                            color: Theme.fg
-                                        }
-
+                                        Text { anchors.centerIn: parent; text: ""; font.pixelSize: 10; color: Theme.fg }
                                         MouseArea {
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: root.sendFile(modelData.id)
                                         }
-
-                                        ToolTip {
-                                            visible: ma.containsMouse && modelData.isReachable
-                                            text: "Send file"
-                                            delay: 800
-                                        }
+                                        ToolTip { visible: ma.containsMouse && modelData.isReachable; text: "Send file"; delay: 800 }
                                     }
 
                                     Rectangle {
-                                        height: 20
-                                        width: 40
-                                        radius: 4
-                                        color: Theme.background
+                                        height: 20; width: 40; radius: 4; color: Theme.background
                                         visible: modelData.isReachable
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: ""
-                                            font.pixelSize: 10
-                                            color: Theme.fg
-                                        }
-
+                                        Text { anchors.centerIn: parent; text: ""; font.pixelSize: 10; color: Theme.fg }
                                         MouseArea {
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: root.sendSms(modelData.id, modelData.name)
                                         }
-
-                                        ToolTip {
-                                            visible: ma.containsMouse && modelData.isReachable
-                                            text: "Send SMS"
-                                            delay: 800
-                                        }
+                                        ToolTip { visible: ma.containsMouse && modelData.isReachable; text: "Send SMS"; delay: 800 }
                                     }
 
                                     Item { Layout.fillWidth: true }
@@ -386,20 +272,13 @@ Item {
                     }
                 }
 
-                // Refresh button
                 Rectangle {
                     Layout.fillWidth: true
                     height: 28
                     radius: 6
                     color: Theme.surface
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: " Refresh"
-                        font.pixelSize: 11
-                        color: Theme.fg
-                    }
-
+                    Text { anchors.centerIn: parent; text: " Refresh"; font.pixelSize: 11; color: Theme.fg }
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor

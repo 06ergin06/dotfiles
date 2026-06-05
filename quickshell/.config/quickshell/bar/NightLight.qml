@@ -6,8 +6,8 @@ import Quickshell._Window
 
 Item {
     id: root
-    implicitWidth: nlBtn.implicitWidth
-    implicitHeight: nlBtn.implicitHeight
+    implicitWidth: 20
+    implicitHeight: 20
 
     property var barWindow: null
     property bool active: false
@@ -17,73 +17,33 @@ Item {
         id: checkStatus
         command: ["hyprctl", "getoption", "decoration:screen_shader"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                active = this.text.indexOf("nightlight.frag") >= 0
-                nlBtn.requestPaint()
-            }
+            onStreamFinished: active = this.text.indexOf("nightlight.frag") >= 0
         }
     }
 
     function toggle() {
-        if (active) {
-            Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh"])
-        } else {
-            Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(currentTemp)])
-        }
+        Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh"].concat(active ? [] : [String(currentTemp)]))
         statusTimer.start()
     }
 
-    function refreshStatus() {
-        checkStatus.running = true
-    }
+    function refreshStatus() { checkStatus.running = true }
 
     function setTemp(t) {
         currentTemp = t
-        if (active) {
-            Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(t)])
-        }
+        if (active) Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(t)])
     }
 
     Timer {
         id: statusTimer
-        interval: 300
-        repeat: false
+        interval: 300; repeat: false
         onTriggered: checkStatus.running = true
     }
 
-    Canvas {
-        id: nlBtn
-        implicitWidth: 20
-        implicitHeight: 20
-
-        onPaint: {
-            var ctx = getContext("2d")
-            ctx.clearRect(0, 0, width, height)
-            var cx = width / 2
-            var cy = height / 2
-            var r = Math.min(width, height) / 2 - 2
-
-            ctx.fillStyle = root.active ? "#f9e2af" : "#cdd6f4"
-            ctx.beginPath()
-
-            if (root.active) {
-                ctx.arc(cx, cy, r, Math.PI * 0.2, Math.PI * 1.8, false)
-                ctx.quadraticCurveTo(cx - r*0.2, cy, cx + r*0.8, cy + r*0.8)
-                ctx.fill()
-            } else {
-                ctx.arc(cx, cy, r * 0.7, 0, Math.PI * 2, false)
-                ctx.fill()
-                ctx.strokeStyle = "#cdd6f4"
-                ctx.lineWidth = 1.5
-                for(var i=0; i<8; i++) {
-                    var angle = i * Math.PI / 4;
-                    ctx.beginPath()
-                    ctx.moveTo(cx + Math.cos(angle) * (r * 0.9), cy + Math.sin(angle) * (r * 0.9))
-                    ctx.lineTo(cx + Math.cos(angle) * (r * 1.2), cy + Math.sin(angle) * (r * 1.2))
-                    ctx.stroke()
-                }
-            }
-        }
+    Text {
+        anchors.centerIn: parent
+        text: active ? "" : ""
+        font.pixelSize: 18
+        color: active ? "#f9e2af" : Theme.fg
 
         MouseArea {
             anchors.fill: parent
@@ -97,10 +57,7 @@ Item {
 
     Item {
         id: anchorPoint
-        x: -50
-        y: root.height + 20
-        width: 1
-        height: 1
+        x: -50; y: root.height + 20; width: 1; height: 1
     }
 
     PopupWindow {
@@ -117,26 +74,8 @@ Item {
 
         color: "transparent"
 
-        Rectangle {
-            anchors.fill: parent
-            focus: true
-            color: Theme.background
-            radius: Theme.barRadius
-            border.color: Theme.border
-            border.width: 1
-
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    nlMenu.visible = false
-                    event.accepted = true
-                }
-            }
-
-            onActiveFocusChanged: {
-                if (!activeFocus && nlMenu.visible) {
-                    nlMenu.visible = false
-                }
-            }
+        PopupContent {
+            popupWindow: nlMenu
 
             ColumnLayout {
                 anchors.fill: parent
@@ -145,19 +84,14 @@ Item {
 
                 Text {
                     text: "Night Light: " + currentTemp + "K"
-                    font.pixelSize: 12
-                    color: Theme.fg
+                    font.pixelSize: 12; color: Theme.fg
                 }
 
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
 
-                    Text {
-                        text: "\u2600\uFE0F"
-                        font.pixelSize: 12
-                        color: Theme.fgMuted
-                    }
+                    Text { text: "\u2600\uFE0F"; font.pixelSize: 12; color: Theme.fgMuted }
 
                     SliderBar {
                         Layout.fillWidth: true
@@ -165,17 +99,11 @@ Item {
                         trackColor: "#f9e2af"
                         onMoved: {
                             root.currentTemp = Math.round(3000 + sliderValue * (6500 - 3000))
-                            if (root.active) {
-                                Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(root.currentTemp)])
-                            }
+                            if (root.active) Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(root.currentTemp)])
                         }
                     }
 
-                    Text {
-                        text: "\uD83C\uDF19"
-                        font.pixelSize: 12
-                        color: Theme.fgMuted
-                    }
+                    Text { text: "\uD83C\uDF19"; font.pixelSize: 12; color: Theme.fgMuted }
                 }
 
                 Rectangle {

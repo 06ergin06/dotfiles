@@ -10,14 +10,11 @@ Item {
     implicitHeight: row.implicitHeight
 
     property var barWindow: null
-
     property int backlight: 0
     readonly property int backlightMax: 3
 
     Timer {
-        interval: 1000
-        running: true
-        repeat: true
+        interval: 1000; running: true; repeat: true
         onTriggered: kbdPoll.running = true
     }
 
@@ -51,7 +48,6 @@ Item {
             font.pixelSize: 16
             color: backlight > 0 ? Theme.fg : Theme.fgMuted
         }
-
         Text {
             text: backlight > 0 ? backlight + "/" + backlightMax : "Off"
             font.pixelSize: 12
@@ -62,17 +58,12 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            popup.visible ? popup.visible = false : popup.visible = true
-        }
+        onClicked: popup.visible ? popup.visible = false : popup.visible = true
     }
 
     Item {
         id: anchorPoint
-        x: -20
-        y: root.height + 20
-        width: root.width
-        height: 1
+        x: -20; y: root.height + 20; width: root.width; height: 1
     }
 
     PopupWindow {
@@ -89,27 +80,8 @@ Item {
 
         color: "transparent"
 
-        Rectangle {
-            anchors.fill: parent
-            focus: true
-
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    popup.visible = false
-                    event.accepted = true
-                }
-            }
-
-            onActiveFocusChanged: {
-                if (!activeFocus && popup.visible) {
-                    popup.visible = false
-                }
-            }
-
-            color: Theme.background
-            radius: Theme.barRadius
-            border.color: Theme.border
-            border.width: 1
+        PopupContent {
+            popupWindow: popup
 
             ColumnLayout {
                 anchors.fill: parent
@@ -118,19 +90,14 @@ Item {
 
                 Text {
                     text: "Keyboard Backlight"
-                    font.pixelSize: 11
-                    color: Theme.fgMuted
+                    font.pixelSize: 11; color: Theme.fgMuted
                 }
 
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
 
-                    Text {
-                        text: ""
-                        font.pixelSize: 16
-                        color: Theme.fg
-                    }
+                    Text { text: ""; font.pixelSize: 16; color: Theme.fg }
 
                     SliderBar {
                         Layout.fillWidth: true
@@ -145,8 +112,7 @@ Item {
 
                     Text {
                         text: root.backlight + "/" + root.backlightMax
-                        font.pixelSize: 10
-                        color: Theme.fg
+                        font.pixelSize: 10; color: Theme.fg
                         horizontalAlignment: Text.AlignRight
                         Layout.preferredWidth: 30
                     }

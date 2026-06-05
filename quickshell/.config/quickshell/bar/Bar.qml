@@ -111,156 +111,51 @@ Scope {
                             Layout.alignment: Qt.AlignVCenter
                             spacing: 4
 
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
-                                visible: awItem.title !== ""
+                            PillButton {
                                 implicitWidth: awItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                ActiveWindow {
-                                    id: awItem
-                                    anchors.centerIn: parent
-                                }
+                                visible: awItem.title !== ""
+                                ActiveWindow { id: awItem; anchors.centerIn: parent }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: netItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                Network {
-                                    id: netItem
-                                    anchors.centerIn: parent
-                                    barWindow: win
-                                }
+                                Network { id: netItem; anchors.centerIn: parent; barWindow: win }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: btItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                Bluetooth {
-                                    id: btItem
-                                    anchors.centerIn: parent
-                                    barWindow: win
-                                }
+                                Bluetooth { id: btItem; anchors.centerIn: parent; barWindow: win }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: dndItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                DoNotDisturb {
-                                    id: dndItem
-                                    anchors.centerIn: parent
-                                }
+                                DoNotDisturb { id: dndItem; anchors.centerIn: parent }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: volItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                Volume {
-                                    id: volItem
-                                    anchors.centerIn: parent
-                                    barWindow: win
-                                    Component.onCompleted: root.volumeItems.push(this)
-                                }
+                                Volume { id: volItem; anchors.centerIn: parent; barWindow: win; Component.onCompleted: root.volumeItems.push(this) }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: brItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                Brightness {
-                                    id: brItem
-                                    anchors.centerIn: parent
-                                    barWindow: win
-                                    Component.onCompleted: root.brightnessItems.push(this)
-                                }
+                                Brightness { id: brItem; anchors.centerIn: parent; barWindow: win; Component.onCompleted: root.brightnessItems.push(this) }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: batItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                Battery {
-                                    id: batItem
-                                    anchors.centerIn: parent
-                                }
+                                Battery { id: batItem; anchors.centerIn: parent }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: ppItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                PowerProfile {
-                                    id: ppItem
-                                    anchors.centerIn: parent
-                                }
+                                PowerProfile { id: ppItem; anchors.centerIn: parent }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
                                 implicitWidth: kdeItem.implicitWidth + Theme.pillPaddingH * 2
-
-                                KdeConnect {
-                                    id: kdeItem
-                                    anchors.centerIn: parent
-                                    barWindow: win
-                                }
+                                KdeConnect { id: kdeItem; anchors.centerIn: parent; barWindow: win }
                             }
-
-                            Rectangle {
-                                height: Theme.pillMinHeight
-                                radius: Theme.pillRadius
-                                color: Theme.surface
-                                border.color: Theme.border
-                                border.width: 1
+                            PillButton {
+                                id: powerPill
                                 implicitWidth: powerLabel.implicitWidth + Theme.pillPaddingH * 2
-
                                 Text {
                                     id: powerLabel
                                     anchors.centerIn: parent
-                                    text: "⏻"
-                                    font.pixelSize: 14
-                                    color: Theme.fg
+                                    text: "⏻"; font.pixelSize: 14; color: Theme.fg
                                 }
-
                                 MouseArea {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
