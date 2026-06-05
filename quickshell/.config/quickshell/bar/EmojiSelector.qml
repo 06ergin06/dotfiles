@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import "EmojiNames.js" as EmojiData
 
 Item {

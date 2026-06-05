@@ -204,12 +204,6 @@ Item {
         }
     }
 
-    GlobalShortcut {
-        name: "quickshell:clipboard-toggle"
-        description: "Toggle Clipboard Manager"
-        onPressed: root.toggle()
-    }
-
     Component.onCompleted: { refresh() }
 
     function toggle() {
