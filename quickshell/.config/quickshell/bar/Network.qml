@@ -64,8 +64,8 @@ Item {
     PopupWindow {
         id: wifiMenu
         visible: false
-        implicitWidth: 250
-        implicitHeight: 300
+        implicitWidth: 280
+        implicitHeight: 320
         grabFocus: true
 
         anchor.window: root.barWindow

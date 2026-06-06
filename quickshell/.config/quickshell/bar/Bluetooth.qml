@@ -27,7 +27,10 @@ Item {
 
     Item {
         id: anchorPoint
-        x: -40; y: root.height + 20; width: root.width; height: 1
+        x: -40
+        y: root.height + 20
+        width: root.width
+        height: 1
     }
 
     PopupWindow {
@@ -56,33 +59,62 @@ Item {
                     Layout.fillWidth: true
                     spacing: 8
 
-                    Text { text: "Bluetooth"; font.pixelSize: 14; font.bold: true; color: Theme.fg }
-                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: "Bluetooth"
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: Theme.fg
+                    }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     Rectangle {
                         id: toggle
-                        width: 40; height: 20; radius: 10
+                        width: 40
+                        height: 20
+                        radius: 10
                         color: root.adapter && root.adapter.enabled ? Theme.accent : "#555555"
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 150
+                            }
+                        }
 
                         Rectangle {
-                            width: 16; height: 16; radius: 8; color: "#FFFFFF"
-                            x: root.adapter && root.adapter.enabled ? toggle.width - width - 2 : 2; y: 2
-                            Behavior on x { NumberAnimation { duration: 150 } }
+                            width: 16
+                            height: 16
+                            radius: 8
+                            color: "#FFFFFF"
+                            x: root.adapter && root.adapter.enabled ? toggle.width - width - 2 : 2
+                            y: 2
+                            Behavior on x {
+                                NumberAnimation {
+                                    duration: 150
+                                }
+                            }
                         }
 
                         MouseArea {
                             anchors.fill: parent
-                            onClicked: { if (root.adapter) root.adapter.enabled = !root.adapter.enabled }
+                            onClicked: {
+                                if (root.adapter)
+                                    root.adapter.enabled = !root.adapter.enabled;
+                            }
                         }
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: Theme.surface
+                }
 
                 Text {
                     text: root.adapter && root.adapter.enabled ? "Devices" : "Bluetooth off"
-                    font.pixelSize: 11; color: Theme.fgMuted
+                    font.pixelSize: 11
+                    color: Theme.fgMuted
                 }
 
                 ListView {
@@ -109,8 +141,10 @@ Item {
 
                                 Text {
                                     text: modelData.name || modelData.deviceName || modelData.address || "Unknown"
-                                    font.pixelSize: 12; color: Theme.fg
-                                    elide: Text.ElideRight; Layout.fillWidth: true
+                                    font.pixelSize: 12
+                                    color: Theme.fg
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
                                 }
 
                                 Text {
@@ -122,20 +156,24 @@ Item {
 
                             Rectangle {
                                 visible: modelData.paired || modelData.connected
-                                width: 50; height: 24; radius: 4
+                                width: 50
+                                height: 24
+                                radius: 4
                                 color: modelData.connected ? "#33F38BA8" : Theme.surface
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: modelData.connected ? "Connected" : "Connect"
-                                    font.pixelSize: 10
+                                    font.pixelSize: 8
                                     color: modelData.connected ? "#F38BA8" : Theme.fg
                                 }
 
                                 MouseArea {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: { modelData.connected ? modelData.disconnect() : modelData.connect() }
+                                    onClicked: {
+                                        modelData.connected ? modelData.disconnect() : modelData.connect();
+                                    }
                                 }
                             }
                         }
