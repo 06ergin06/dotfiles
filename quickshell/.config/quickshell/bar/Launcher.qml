@@ -251,8 +251,7 @@ Item {
     }
 
     function launchItem(item) {
-        var cmd = item.exec;
-        Quickshell.execDetached(["sh", "-c", cmd]);
+        Quickshell.execDetached(["sh", "-c", item.exec]);
         overlay.visible = false;
     }
 }
