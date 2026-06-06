@@ -15,21 +15,14 @@ hl.monitor({
 ---- MY PROGRAMS ----
 ---------------------
 
--- Set programs that you use
 local terminal    = "kitty"
 local fileManager = "thunar"
 local menu        = "qs ipc call quickshell toggleLauncher"
-
 
 -------------------
 ---- AUTOSTART ----
 -------------------
 
--- See https://wiki.hypr.land/Configuring/Basics/Autostart/
-
--- Autostart necessary processes (like notifications daemons, status bars, etc.)
--- Or execute your favorite apps at launch like this:
---
  hl.on("hyprland.start", function () 
    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
    hl.exec_cmd("/usr/lib/hyprpolkitagent &")
@@ -94,21 +87,15 @@ hl.config({
             active_border   = { colors = {"rgba(880808ee)", "rgba(5d0707ee)"}, angle = 45 },
             inactive_border = "rgba(333333aa)",
         },
-
-        -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
         resize_on_border = true,
-
         -- Please see https://wiki.hypr.land/Configuring/Advanced-and-Cool/Tearing/ before you turn this on
         allow_tearing = false,
-
         layout = "dwindle",
     },
 
     decoration = {
         rounding       = 10,
         rounding_power = 2,
-
-        -- Change transparency of focused and unfocused windows
         active_opacity   = 1.0,
         inactive_opacity = 0.8,
 
@@ -254,7 +241,6 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + Q", hl.dsp.window.close())
--- closeWindowBind:set_enabled(false)
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }))
@@ -277,8 +263,6 @@ hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("env PATH=/home/ergin/.local/bin:$PATH quickshell -c HyprQuickFrame -n"))
--- Switch workspaces with mainMod + [0-9]
--- Move active window to a workspace with mainMod + SHIFT + [0-9]
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
     hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
@@ -298,14 +282,14 @@ hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && /home/ergin/.config/quickshell/refresh-volume.sh"),      { locked = true, repeating = true })
 hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && /home/ergin/.config/quickshell/refresh-volume.sh"),     { locked = true, repeating = true })
 hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle && /home/ergin/.config/quickshell/refresh-volume.sh"),   { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+ && /home/ergin/.config/quickshell/refresh-brightness.sh"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%- && /home/ergin/.config/quickshell/refresh-brightness.sh"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("brightnessctl -n2 set 5%+ && /home/ergin/.config/quickshell/refresh-brightness.sh"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl -n2 set 5%- && /home/ergin/.config/quickshell/refresh-brightness.sh"), { locked = true, repeating = true })
 
 -- Requires playerctl
-hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+--hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
+--hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+--hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+--hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 
 
 --------------------------------
@@ -324,7 +308,6 @@ local suppressMaximizeRule = hl.window_rule({
 
     suppress_event = "maximize",
 })
--- suppressMaximizeRule:set_enabled(false)
 
 hl.window_rule({
     -- Fix some dragging issues with XWayland
