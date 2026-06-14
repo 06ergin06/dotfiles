@@ -93,7 +93,7 @@ Item {
 
         Rectangle {
             id: emojiPopup
-            implicitWidth: 380
+            implicitWidth: 340
             implicitHeight: 420
             radius: Theme.barRadius
             color: Theme.background
@@ -113,12 +113,18 @@ Item {
                     id: searchField
                     Layout.fillWidth: true
                     height: 28
-                    topPadding: 8; bottomPadding: 8; leftPadding: 8; rightPadding: 8
+                    topPadding: 8
+                    bottomPadding: 8
+                    leftPadding: 8
+                    rightPadding: 8
                     placeholderText: "Search emoji..."
                     color: Theme.fg
                     placeholderTextColor: Theme.fgMuted
                     font.pixelSize: 12
-                    background: Rectangle { radius: 6; color: Theme.surface }
+                    background: Rectangle {
+                        radius: 6
+                        color: Theme.surface
+                    }
                     onTextChanged: root.searchText = text
                 }
 
@@ -133,10 +139,16 @@ Item {
                             required property var modelData
                             required property int index
 
-                            height: 24; width: 32; radius: 6
+                            height: 24
+                            width: 32
+                            radius: 6
                             color: root.currentCat === modelData.cat ? Theme.accent : Theme.surface
 
-                            Text { anchors.centerIn: parent; text: modelData.list[0]; font.pixelSize: 14 }
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.list[0]
+                                font.pixelSize: 14
+                            }
 
                             MouseArea {
                                 anchors.fill: parent
@@ -174,10 +186,16 @@ Item {
                                 delegate: Rectangle {
                                     required property var modelData
 
-                                    width: 38; height: 38; radius: 6
+                                    width: 38
+                                    height: 38
+                                    radius: 6
                                     color: ma.containsMouse ? Theme.surfaceVariant : "transparent"
 
-                                    Text { anchors.centerIn: parent; text: modelData; font.pixelSize: 22 }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData
+                                        font.pixelSize: 22
+                                    }
 
                                     MouseArea {
                                         id: ma

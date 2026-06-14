@@ -9,7 +9,7 @@ Item {
     property bool dragging: false
     property color trackColor: "#888"
 
-    signal moved()
+    signal moved
 
     Rectangle {
         anchors.verticalCenter: parent.verticalCenter
@@ -37,27 +37,32 @@ Item {
         height: 14
         radius: 7
         color: "#FFFFFF"
-        Behavior on x { enabled: !sliderRoot.dragging; NumberAnimation { duration: 80 } }
+        Behavior on x {
+            enabled: !sliderRoot.dragging
+            NumberAnimation {
+                duration: 80
+            }
+        }
     }
 
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onPressed: mouse => {
-            sliderRoot.dragging = true
-            var frac = Math.max(0, Math.min(1, mouse.x / sliderRoot.width))
-            sliderRoot.sliderValue = frac
-            sliderRoot.moved()
+            sliderRoot.dragging = true;
+            var frac = Math.max(0, Math.min(1, mouse.x / sliderRoot.width));
+            sliderRoot.sliderValue = frac;
+            sliderRoot.moved();
         }
         onPositionChanged: mouse => {
             if (pressed) {
-                var frac = Math.max(0, Math.min(1, mouse.x / sliderRoot.width))
-                sliderRoot.sliderValue = frac
-                sliderRoot.moved()
+                var frac = Math.max(0, Math.min(1, mouse.x / sliderRoot.width));
+                sliderRoot.sliderValue = frac;
+                sliderRoot.moved();
             }
         }
         onReleased: {
-            sliderRoot.dragging = false
+            sliderRoot.dragging = false;
         }
     }
 }

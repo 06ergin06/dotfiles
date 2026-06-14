@@ -10,9 +10,10 @@ Item {
     implicitHeight: label.implicitHeight
 
     readonly property string title: {
-        const win = Hyprland.focusedWindow
-        if (!win) return ""
-        return win.class || win.title || ""
+        const win = Hyprland.focusedWindow;
+        if (!win)
+            return "";
+        return win.class || win.title || "";
     }
 
     Text {
@@ -28,7 +29,11 @@ Item {
         font.pixelSize: 13
         font.weight: Font.Medium
 
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 150
+            }
+        }
         opacity: root.title !== "" ? 1 : 0
     }
 }
