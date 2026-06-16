@@ -26,11 +26,13 @@ Item {
     }
 
     Timer {
-        interval: 10000; running: true; repeat: true
+        interval: 5000
+        running: volMenu.visible
+        repeat: true
         onTriggered: {
             sinkPoll.running = true
             srcPoll.running = true
-            if (volMenu.visible) statusPoll.running = true
+            statusPoll.running = true
         }
     }
 
@@ -181,7 +183,10 @@ Item {
         cursorShape: Qt.PointingHandCursor
         onClicked: {
             volMenu.visible ? volMenu.visible = false : volMenu.visible = true
-            if (volMenu.visible) refreshStatus()
+            if (volMenu.visible) {
+                refreshVolume()
+                refreshStatus()
+            }
         }
         onWheel: event => {
             var delta = event.angleDelta.y > 0 ? 0.05 : -0.05

@@ -94,7 +94,7 @@ Item {
             return;
         }
         var next = _batteryQueue[0];
-        getBatteryProc.command = ["sh", "-c", "kdeconnect-cli --device \"" + next.deviceId + "\" --battery 2>/dev/null | head -5"];
+        getBatteryProc.command = ["busctl", "--user", "get-property", "org.kde.kdeconnect", "/modules/kdeconnect/devices/" + next.deviceId + "/battery", "org.kde.kdeconnect.device.battery", "charge"];
         getBatteryProc.running = true;
     }
 
@@ -106,7 +106,7 @@ Item {
         }
         var idx = next.index;
         if (idx >= 0 && idx < _deviceBackup.length) {
-            var batMatch = text.match(/charge:\s*(\d+)/i);
+            var batMatch = text.match(/i\s+(\d+)/);
             if (batMatch) {
                 _deviceBackup[idx] = Object.assign({}, _deviceBackup[idx]);
                 _deviceBackup[idx].battery = batMatch[1] + "%";
@@ -122,17 +122,14 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: root.onBatteryResult(text)
         }
-        stderr: StdioCollector {
-            onStreamFinished: root.onBatteryResult("")
-        }
     }
 
     function sendFile(deviceId) {
         Quickshell.execDetached(["sh", "-c", 'file=$(zenity --file-selection --title="Select file to send") && [ -n "$file" ] && kdeconnect-cli --device "' + deviceId + '" --share "$file"']);
     }
 
-    function sendSms(deviceId, deviceName) {
-        Quickshell.execDetached(["sh", "-c", 'msg=$(zenity --entry --title="SMS to ' + deviceName + '" --text="Message:" --width=400) && [ -n "$msg" ] && phone=$(zenity --entry --title="Phone Number" --text="Number:") && [ -n "$phone" ] && kdeconnect-cli --device "' + deviceId + '" --send-sms "$msg" --destination "$phone"']);
+    function ringDevice(deviceId) {
+        Quickshell.execDetached(["kdeconnect-cli", "--device", deviceId, "--ring"]);
     }
 
     function pingDevice(deviceId) {
@@ -140,7 +137,7 @@ Item {
     }
 
     function browseDevice(deviceId) {
-        Quickshell.execDetached(["kdeconnect-cli", "--device", deviceId, "--list-notifications"]);
+        Quickshell.execDetached(["sh", "-c", "kdeconnect-cli --device \"" + deviceId + "\" --mount && thunar \"$(kdeconnect-cli --device \"" + deviceId + "\" --get-mount-point)\""]);
     }
 
     Component.onCompleted: refreshDevices()
@@ -234,6 +231,12 @@ Item {
                             radius: 8
                             color: ma.containsMouse ? Theme.surfaceVariant : "transparent"
 
+                            MouseArea {
+                                id: ma
+                                anchors.fill: parent
+                                hoverEnabled: true
+                            }
+
                             ColumnLayout {
                                 anchors.fill: parent
                                 anchors.margins: 8
@@ -265,95 +268,169 @@ Item {
                                 }
 
                                 RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 4
+                                     Layout.fillWidth: true
+                                     spacing: 4
 
-                                    Rectangle {
-                                        height: 20
-                                        width: 40
-                                        radius: 4
-                                        color: Theme.background
-                                        visible: modelData.isReachable
+                                     Rectangle {
+                                         height: 20
+                                         width: 40
+                                         radius: 4
+                                         color: Theme.background
+                                         visible: modelData.isReachable
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: ""
-                                            font.pixelSize: 10
-                                            color: Theme.fg
-                                        }
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: root.pingDevice(modelData.id)
-                                        }
-                                        ToolTip {
-                                            visible: ma.containsMouse && modelData.isReachable
-                                            text: "Ping device"
-                                            delay: 800
-                                        }
-                                    }
+                                         Text {
+                                             anchors.centerIn: parent
+                                             text: ""
+                                             font.pixelSize: 10
+                                             color: Theme.fg
+                                         }
+                                         MouseArea {
+                                             id: pingMa
+                                             anchors.fill: parent
+                                             hoverEnabled: true
+                                             cursorShape: Qt.PointingHandCursor
+                                             onClicked: root.pingDevice(modelData.id)
+                                         }
+                                         ToolTip {
+                                             id: pingTip
+                                             visible: pingMa.containsMouse
+                                             text: "Ping device"
+                                             delay: 400
+                                             contentItem: Text {
+                                                 text: pingTip.text
+                                                 color: Theme.fg
+                                                 font.pixelSize: 10
+                                             }
+                                             background: Rectangle {
+                                                 color: Theme.surface
+                                                 border.color: Theme.border
+                                                 border.width: 1
+                                                 radius: 4
+                                             }
+                                         }
+                                     }
 
-                                    Rectangle {
-                                        height: 20
-                                        width: 40
-                                        radius: 4
-                                        color: Theme.background
-                                        visible: modelData.isReachable
+                                     Rectangle {
+                                         height: 20
+                                         width: 40
+                                         radius: 4
+                                         color: Theme.background
+                                         visible: modelData.isReachable
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: ""
-                                            font.pixelSize: 10
-                                            color: Theme.fg
-                                        }
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: root.sendFile(modelData.id)
-                                        }
-                                        ToolTip {
-                                            visible: ma.containsMouse && modelData.isReachable
-                                            text: "Send file"
-                                            delay: 800
-                                        }
-                                    }
+                                         Text {
+                                             anchors.centerIn: parent
+                                             text: ""
+                                             font.pixelSize: 10
+                                             color: Theme.fg
+                                         }
+                                         MouseArea {
+                                             id: fileMa
+                                             anchors.fill: parent
+                                             hoverEnabled: true
+                                             cursorShape: Qt.PointingHandCursor
+                                             onClicked: root.sendFile(modelData.id)
+                                         }
+                                         ToolTip {
+                                             id: fileTip
+                                             visible: fileMa.containsMouse
+                                             text: "Send file"
+                                             delay: 400
+                                             contentItem: Text {
+                                                 text: fileTip.text
+                                                 color: Theme.fg
+                                                 font.pixelSize: 10
+                                             }
+                                             background: Rectangle {
+                                                 color: Theme.surface
+                                                 border.color: Theme.border
+                                                 border.width: 1
+                                                 radius: 4
+                                             }
+                                         }
+                                     }
 
-                                    Rectangle {
-                                        height: 20
-                                        width: 40
-                                        radius: 4
-                                        color: Theme.background
-                                        visible: modelData.isReachable
+                                     Rectangle {
+                                         height: 20
+                                         width: 40
+                                         radius: 4
+                                         color: Theme.background
+                                         visible: modelData.isReachable
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: ""
-                                            font.pixelSize: 10
-                                            color: Theme.fg
-                                        }
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: root.sendSms(modelData.id, modelData.name)
-                                        }
-                                        ToolTip {
-                                            visible: ma.containsMouse && modelData.isReachable
-                                            text: "Send SMS"
-                                            delay: 800
-                                        }
-                                    }
+                                         Text {
+                                             anchors.centerIn: parent
+                                             text: ""
+                                             font.pixelSize: 10
+                                             color: Theme.fg
+                                         }
+                                         MouseArea {
+                                             id: ringMa
+                                             anchors.fill: parent
+                                             hoverEnabled: true
+                                             cursorShape: Qt.PointingHandCursor
+                                             onClicked: root.ringDevice(modelData.id)
+                                         }
+                                         ToolTip {
+                                             id: ringTip
+                                             visible: ringMa.containsMouse
+                                             text: "Ring device"
+                                             delay: 400
+                                             contentItem: Text {
+                                                 text: ringTip.text
+                                                 color: Theme.fg
+                                                 font.pixelSize: 10
+                                             }
+                                             background: Rectangle {
+                                                 color: Theme.surface
+                                                 border.color: Theme.border
+                                                 border.width: 1
+                                                 radius: 4
+                                             }
+                                         }
+                                     }
 
-                                    Item {
-                                        Layout.fillWidth: true
-                                    }
-                                }
-                            }
+                                     Rectangle {
+                                         height: 20
+                                         width: 40
+                                         radius: 4
+                                         color: Theme.background
+                                         visible: modelData.isReachable
 
-                            MouseArea {
-                                id: ma
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
+                                         Text {
+                                             anchors.centerIn: parent
+                                             text: ""
+                                             font.pixelSize: 10
+                                             color: Theme.fg
+                                         }
+                                         MouseArea {
+                                             id: browseMa
+                                             anchors.fill: parent
+                                             hoverEnabled: true
+                                             cursorShape: Qt.PointingHandCursor
+                                             onClicked: root.browseDevice(modelData.id)
+                                         }
+                                         ToolTip {
+                                             id: browseTip
+                                             visible: browseMa.containsMouse
+                                             text: "Browse storage"
+                                             delay: 400
+                                             contentItem: Text {
+                                                 text: browseTip.text
+                                                 color: Theme.fg
+                                                 font.pixelSize: 10
+                                             }
+                                             background: Rectangle {
+                                                 color: Theme.surface
+                                                 border.color: Theme.border
+                                                 border.width: 1
+                                                 radius: 4
+                                             }
+                                         }
+                                     }
+
+                                     Item {
+                                         Layout.fillWidth: true
+                                     }
+                                 }
                             }
                         }
                     }
