@@ -50,8 +50,9 @@ hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 hl.env("QT_STYLE_OVERRIDE", "kvantum")
-hl.env("GTK_THEME", "cachyos-nord")
+hl.env("GTK_THEME", "cachyos-nord-red")
 hl.env("GTK_ICON_THEME", "Papirus-Dark")
+hl.env("SAL_USE_GTK3", "1")
 -----------------------
 ----- PERMISSIONS -----
 -----------------------
