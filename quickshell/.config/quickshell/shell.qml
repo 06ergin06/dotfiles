@@ -15,6 +15,10 @@ ShellRoot {
         id: launcher
     }
 
+    MediaPlayer {
+        id: media
+    }
+
     IpcHandler {
         target: "quickshell"
         enabled: true
@@ -29,6 +33,10 @@ ShellRoot {
 
         function toggleLauncher() {
             launcher.toggle()
+        }
+
+        function toggleMediaPlayer() {
+            media.toggle()
         }
 
         function refreshBrightness() {

@@ -11,6 +11,7 @@ DoNotDisturb 1.0 DoNotDisturb.qml
 EmojiSelector 1.0 EmojiSelector.qml
 KdeConnect 1.0 KdeConnect.qml
 Launcher 1.0 Launcher.qml
+MediaPlayer 1.0 MediaPlayer.qml
 Network 1.0 Network.qml
 PowerProfile 1.0 PowerProfile.qml
 SliderBar 1.0 SliderBar.qml

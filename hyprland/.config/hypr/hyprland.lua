@@ -250,6 +250,7 @@ hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("zen-browser"))
 
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call quickshell toggleClipboard"))
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call quickshell toggleEmoji"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("qs ipc call quickshell toggleMediaPlayer"))
 hl.bind(mainMod .. " + Return", hl.dsp.window.fullscreen())
 
 hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left" }))
