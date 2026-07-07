@@ -17,6 +17,35 @@ Item {
     property bool nlActive: false
     property int nlTemp: 4000
 
+    property int nlTempPending: 4000
+    property bool nlUpdatePending: false
+
+    Timer {
+        id: nlThrottleTimer
+        interval: 80
+        repeat: true
+        running: false
+        onTriggered: {
+            if (root.nlUpdatePending) {
+                root.nlUpdatePending = false;
+                root.nlSetTemp(root.nlTempPending);
+            } else {
+                nlThrottleTimer.stop();
+            }
+        }
+    }
+
+    function queueNlTemp(t) {
+        root.nlTempPending = t;
+        root.nlTemp = t;
+        if (!nlThrottleTimer.running) {
+            root.nlSetTemp(t);
+            nlThrottleTimer.start();
+        } else {
+            root.nlUpdatePending = true;
+        }
+    }
+
     function refreshBrightness() {
         if (brightnessMax > 100)
             brightnessPoll.running = true;
@@ -116,7 +145,7 @@ Item {
         spacing: 4
 
         Text {
-            text: root.nlActive ? "" : ""
+            text: root.nlActive ? "󰖔" : "󰖨"
             font.pixelSize: 16
             color: root.nlActive ? "#f9e2af" : Theme.fg
         }
@@ -186,7 +215,7 @@ Item {
                         spacing: 8
 
                         Text {
-                            text: ""
+                            text: "󰖨"
                             font.pixelSize: 16
                             color: Theme.fg
                         }
@@ -227,7 +256,7 @@ Item {
                         spacing: 8
 
                         Text {
-                            text: ""
+                            text: "󰌌"
                             font.pixelSize: 16
                             color: Theme.fg
                         }
@@ -318,8 +347,8 @@ Item {
                             sliderValue: (root.nlTemp - 3000) / (6500 - 3000)
                             trackColor: "#f9e2af"
                             onMoved: {
-                                root.nlTemp = Math.round(3000 + sliderValue * (6500 - 3000));
-                                root.nlSetTemp(root.nlTemp);
+                                var temp = Math.round(3000 + sliderValue * (6500 - 3000));
+                                root.queueNlTemp(temp);
                             }
                         }
 

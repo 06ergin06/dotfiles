@@ -31,7 +31,7 @@ Item {
     readonly property string valueText: root.showRemaining ? root.remainingText : (root.percent + "%")
 
     readonly property string icon: {
-        if (charging) return ""
+        if (charging) return ""
         if (percent >= 90) return ""
         if (percent >= 75) return ""
         if (percent >= 50) return ""

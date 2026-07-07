@@ -47,6 +47,10 @@ if [[ ! -f "$CACHE_FILE" ]]; then
 elif [[ $(find /usr/share/applications ~/.local/share/applications \
          /var/lib/flatpak/exports/share/applications \
          ~/.local/share/flatpak/exports/share/applications \
+         -type d -newer "$CACHE_FILE" -print -quit 2>/dev/null) || \
+      $(find /usr/share/applications ~/.local/share/applications \
+         /var/lib/flatpak/exports/share/applications \
+         ~/.local/share/flatpak/exports/share/applications \
          -name '*.desktop' -newer "$CACHE_FILE" -print -quit 2>/dev/null) ]]; then
     build_cache
 fi
