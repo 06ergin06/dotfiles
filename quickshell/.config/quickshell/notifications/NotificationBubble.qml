@@ -88,7 +88,7 @@ Rectangle {
         Text {
             id: summaryLabel
             Layout.fillWidth: true
-            text: bubble.notification.summary || ""
+            text: bubble.cleanHtml(bubble.notification.summary || "")
             font.pixelSize: 13
             font.bold: true
             color: Theme.fg
@@ -100,7 +100,7 @@ Rectangle {
         Text {
             id: bodyLabel
             Layout.fillWidth: true
-            text: bubble.notification.body || ""
+            text: bubble.cleanHtml(bubble.notification.body || "")
             font.pixelSize: 12
             font.weight: Font.Normal
             color: "#DDDDDD"
@@ -120,6 +120,22 @@ Rectangle {
         onEntered: bubble.hovered = true
         onExited: bubble.hovered = false
         onClicked: dismissGracefully()
+    }
+
+    function cleanHtml(text) {
+        if (!text) return ""
+        var result = text
+        result = result.replace(/<br\s*\/?>/gi, "\n")
+        result = result.replace(/<\/p>\s*<p>/gi, "\n\n")
+        result = result.replace(/<p>/gi, "").replace(/<\/p>/gi, "\n")
+        result = result.replace(/<[^>]*>/g, "")
+        result = result.replace(/&amp;/g, "&")
+        result = result.replace(/&lt;/g, "<")
+        result = result.replace(/&gt;/g, ">")
+        result = result.replace(/&quot;/g, '"')
+        result = result.replace(/&#39;/g, "'")
+        result = result.replace(/&nbsp;/g, " ")
+        return result
     }
 
     function dismissGracefully() {
