@@ -38,10 +38,6 @@ PanelWindow {
     function toggle() {
         if (active) {
             active = false;
-            // win.visible stays true intentionally: hiding the window causes
-            // Qt to release cache:false Image textures, making art disappear
-            // on reopen. The card slides off-screen via the x animation
-            // instead, which is invisible to the user.
         } else {
             win.screen = activeScreen;
             win.visible = true;
@@ -130,9 +126,11 @@ PanelWindow {
             }
         }
 
-        // onXChanged intentionally removed: we no longer set win.visible=false
-        // when the card slides out, because doing so causes Qt to unload
-        // cache:false Image textures and the album art disappears on reopen.
+        onXChanged: {
+            if (!active && x <= -width) {
+                win.visible = false;
+            }
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -156,7 +154,7 @@ PanelWindow {
                     asynchronous: true
                     smooth: true
                     mipmap: true
-                    cache: false
+                    cache: true
                     opacity: win.activeArt === 1 ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: 300 } }
                     onStatusChanged: {
@@ -176,7 +174,7 @@ PanelWindow {
                     asynchronous: true
                     smooth: true
                     mipmap: true
-                    cache: false
+                    cache: true
                     opacity: win.activeArt === 2 ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: 300 } }
                     onStatusChanged: {
