@@ -38,6 +38,10 @@ PanelWindow {
     function toggle() {
         if (active) {
             active = false;
+            // win.visible stays true intentionally: hiding the window causes
+            // Qt to release cache:false Image textures, making art disappear
+            // on reopen. The card slides off-screen via the x animation
+            // instead, which is invisible to the user.
         } else {
             win.screen = activeScreen;
             win.visible = true;
@@ -60,9 +64,14 @@ PanelWindow {
             return;
         }
 
+        // Double-buffer cross-fade:
+        // Always load into the *inactive* layer so the current art stays
+        // visible until the new one is fully decoded.
         if (activeArt === 1) {
+            art2.source = "";
             art2.source = trackArt;
         } else {
+            art1.source = "";
             art1.source = trackArt;
         }
     }
@@ -121,11 +130,9 @@ PanelWindow {
             }
         }
 
-        onXChanged: {
-            if (!active && x <= -width) {
-                win.visible = false;
-            }
-        }
+        // onXChanged intentionally removed: we no longer set win.visible=false
+        // when the card slides out, because doing so causes Qt to unload
+        // cache:false Image textures and the album art disappears on reopen.
 
         ColumnLayout {
             anchors.fill: parent
@@ -153,7 +160,9 @@ PanelWindow {
                     opacity: win.activeArt === 1 ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: 300 } }
                     onStatusChanged: {
-                        if (status === Image.Ready) {
+                        // Only promote art1 when it is the one we just loaded
+                        // into (i.e. activeArt was NOT already 1).
+                        if (status === Image.Ready && win.activeArt !== 1) {
                             win.activeArt = 1;
                         }
                     }
@@ -171,7 +180,9 @@ PanelWindow {
                     opacity: win.activeArt === 2 ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: 300 } }
                     onStatusChanged: {
-                        if (status === Image.Ready) {
+                        // Only promote art2 when it is the one we just loaded
+                        // into (i.e. activeArt was NOT already 2).
+                        if (status === Image.Ready && win.activeArt !== 2) {
                             win.activeArt = 2;
                         }
                     }
