@@ -1,5 +1,5 @@
 #!/bin/bash
-# idle_handler.sh - ekran arka aydınlatması ve klavye ışığı yönetimi (DPMS yerine güvenli yöntem)
+# idle_handler.sh - gerçek ekran kapatma (DPMS) ve güvenli uyanma yönetimi
 
 action="$1"
 
@@ -9,10 +9,8 @@ SAVE_FILE="/tmp/idle_brightness_save"
 
 case "$action" in
     dim)
-        # Ekranın mevcut parlaklığını al
+        # Mevcut parlaklık seviyesini kaydet
         current_screen=$(brightnessctl -d "$SCREEN_DEV" g 2>/dev/null)
-        
-        # Eğer parlaklık sıfırdan büyükse kaydet (0 ise eski kaydı ezme)
         if [ -n "$current_screen" ] && [ "$current_screen" -gt 0 ]; then
             echo "$current_screen" > "$SAVE_FILE"
         fi
@@ -20,12 +18,19 @@ case "$action" in
         # Klavye ışığını kaydet ve kapat
         brightnessctl -d "$KBD_DEV" -s set 0 2>/dev/null
 
-        # Ekran arka aydınlatmasını tamamen kapat (ekran kararır, DPMS bug'ı yaşanmaz)
-        brightnessctl -d "$SCREEN_DEV" set 0 2>/dev/null
+        # Ekranı tamamen kapat (DPMS OFF)
+        hyprctl dispatch 'hl.dsp.dpms("off")' 2>/dev/null
         ;;
 
     restore)
-        # Ekran parlaklığını geri yükle
+        # Ekranı uyandır
+        hyprctl dispatch 'hl.dsp.dpms("on")' 2>/dev/null
+        hyprctl dispatch 'hl.dsp.dpms("on", "eDP-1")' 2>/dev/null
+
+        # GPU ve panelin uyanması için kısa bir bekleme
+        sleep 0.2
+
+        # Ekran parlaklığını geri yükle (sıfırda takılı kalmasını önlemek için)
         if [ -f "$SAVE_FILE" ]; then
             saved_screen=$(cat "$SAVE_FILE" 2>/dev/null)
             if [ -n "$saved_screen" ] && [ "$saved_screen" -gt 0 ]; then
@@ -37,7 +42,7 @@ case "$action" in
             brightnessctl -d "$SCREEN_DEV" set 50% 2>/dev/null
         fi
 
-        # Klavye ışığını eski haline döndür
+        # Klavye ışığını geri yükle
         brightnessctl -d "$KBD_DEV" -r 2>/dev/null
         ;;
 esac
