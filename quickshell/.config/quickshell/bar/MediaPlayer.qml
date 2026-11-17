@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Services.Mpris
 
 PanelWindow {
     id: win
@@ -51,6 +52,7 @@ PanelWindow {
     property string trackArtist: ""
     property string trackArt: ""
     property int activeArt: 0 // 0 = placeholder, 1 = art1, 2 = art2
+    property var player: null
 
     onTrackArtChanged: {
         if (trackArt === "") {
@@ -72,39 +74,66 @@ PanelWindow {
         }
     }
 
-    function parseMetadata(data) {
-        var parts = data.trim().split("||");
-        if (parts.length >= 3) {
-            playbackStatus = parts[0];
-            var newTitle = parts[1] !== "" ? parts[1] : "Unknown Title";
-            var newArtist = parts[2];
-            var newArt = (parts.length >= 4 && parts[3] !== "") ? parts[3] : "";
+    function syncPlayer() {
+        var list = Mpris.players.values;
+        var chosen = null;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].isPlaying) { chosen = list[i]; break; }
+        }
+        if (!chosen && list.length > 0) chosen = list[0];
+        win.player = chosen;
 
-            // If the song is the same, we lock the cover art to prevent downgrading.
-            // We only update it if we didn't have a cover loaded yet (trackArt was empty).
-            if (newTitle === trackTitle && newArtist === trackArtist) {
-                if (trackArt === "" && newArt !== "") {
-                    trackArt = newArt;
-                }
-            } else {
-                // Different song! Accept the new cover art (even if empty).
-                trackArt = newArt;
+        if (!chosen) {
+            playbackStatus = "Offline";
+            trackTitle = "No media playing";
+            trackArtist = "";
+            trackArt = "";
+            return;
+        }
+
+        if (chosen.playbackState === MprisPlaybackState.Playing)
+            playbackStatus = "Playing";
+        else if (chosen.playbackState === MprisPlaybackState.Paused)
+            playbackStatus = "Paused";
+        else
+            playbackStatus = "Stopped";
+
+        var newTitle = chosen.trackTitle !== "" ? chosen.trackTitle : "Unknown Title";
+        var newArtist = chosen.trackArtist || "";
+        var newArt = chosen.trackArtUrl || "";
+
+        // If the song is the same, we lock the cover art to prevent downgrading.
+        if (newTitle === trackTitle && newArtist === trackArtist) {
+            if (trackArt === "" && newArt !== "") trackArt = newArt;
+        } else {
+            trackArt = newArt;
+        }
+
+        trackTitle = newTitle;
+        trackArtist = newArtist;
+    }
+
+    Repeater {
+        model: Mpris.players
+        delegate: Item {
+            required property var modelData
+
+            Connections {
+                target: modelData
+                function onPlaybackStateChanged() { win.syncPlayer() }
+                function onIsPlayingChanged() { win.syncPlayer() }
+                function onTrackTitleChanged() { win.syncPlayer() }
+                function onTrackArtistChanged() { win.syncPlayer() }
+                function onTrackArtUrlChanged() { win.syncPlayer() }
             }
 
-            trackTitle = newTitle;
-            trackArtist = newArtist;
+            Component.onCompleted: win.syncPlayer()
         }
     }
 
-    Process {
-        id: metadataProcess
-        command: ["sh", "-c", "while true; do playerctl metadata --follow --format '{{status}}||{{title}}||{{artist}}||{{mpris:artUrl}}' 2>/dev/null; echo 'Offline||No media playing||||'; sleep 3; done"]
-        running: true
-        stdout: SplitParser {
-            onRead: data => {
-                win.parseMetadata(data);
-            }
-        }
+    Connections {
+        target: Mpris.players
+        function onValuesChanged() { win.syncPlayer() }
     }
 
     Rectangle {
@@ -250,7 +279,7 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["playerctl", "previous"])
+                        onClicked: { if (win.player) win.player.previous() }
                     }
                 }
 
@@ -274,7 +303,7 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["playerctl", "play-pause"])
+                        onClicked: { if (win.player) win.player.togglePlaying() }
                     }
                 }
 
@@ -298,7 +327,7 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["playerctl", "next"])
+                        onClicked: { if (win.player) win.player.next() }
                     }
                 }
             }

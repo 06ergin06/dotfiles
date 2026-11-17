@@ -10,34 +10,11 @@ Item {
     implicitHeight: 20
 
     property var barWindow: null
-    property bool active: false
-    property int currentTemp: 4000
+    property bool active: NightLightService.active
+    property int currentTemp: NightLightService.temperature
 
-    Process {
-        id: checkStatus
-        command: ["hyprctl", "getoption", "decoration:screen_shader"]
-        stdout: StdioCollector {
-            onStreamFinished: active = this.text.indexOf("nightlight.frag") >= 0
-        }
-    }
-
-    function toggle() {
-        Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh"].concat(active ? [] : [String(currentTemp)]))
-        statusTimer.start()
-    }
-
-    function refreshStatus() { checkStatus.running = true }
-
-    function setTemp(t) {
-        currentTemp = t
-        if (active) Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(t)])
-    }
-
-    Timer {
-        id: statusTimer
-        interval: 300; repeat: false
-        onTriggered: checkStatus.running = true
-    }
+    function toggle() { NightLightService.toggle() }
+    function setTemp(t) { NightLightService.setTemperature(t) }
 
     Text {
         anchors.centerIn: parent
@@ -50,7 +27,6 @@ Item {
             cursorShape: Qt.PointingHandCursor
             onClicked: {
                 nlMenu.visible = !nlMenu.visible
-                checkStatus.running = true
             }
         }
     }
@@ -98,8 +74,8 @@ Item {
                         sliderValue: (currentTemp - 3000) / (6500 - 3000)
                         trackColor: "#f9e2af"
                         onMoved: {
-                            root.currentTemp = Math.round(3000 + sliderValue * (6500 - 3000))
-                            if (root.active) Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(root.currentTemp)])
+                            var temp = Math.round(3000 + sliderValue * (6500 - 3000))
+                            root.setTemp(temp)
                         }
                     }
 

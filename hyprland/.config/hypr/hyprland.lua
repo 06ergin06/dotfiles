@@ -25,9 +25,9 @@ local menu        = "qs ipc call quickshell toggleLauncher"
 
  hl.on("hyprland.start", function ()
    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+   hl.exec_cmd("hyprpaper")
    hl.exec_cmd("/usr/lib/hyprpolkitagent &")
    hl.exec_cmd("nm-applet --indicator")
-   hl.exec_cmd("/home/ergin/.config/hypr/scripts/wallpaper.sh")
    hl.exec_cmd("wl-paste --type text --watch cliphist store &")
    hl.exec_cmd("wl-paste --type image --watch cliphist store &")
    hl.exec_cmd("hypridle &")
@@ -193,10 +193,12 @@ hl.config({
 ----  MISC  ----
 ----------------
 
---hl.config({
---    misc = {
---    },
---})
+hl.config({
+    misc = {
+        disable_hyprland_logo    = true,  -- varsayilan anime mascot wallpaper'lari (wall0/1/2.png) cizme
+        disable_splash_rendering = true,  -- alttaki splash yazisini cizme
+    },
+})
 
 
 ---------------
@@ -278,12 +280,12 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- Laptop multimedia keys for volume and LCD brightness
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && /home/ergin/.config/quickshell/refresh-volume.sh"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && /home/ergin/.config/quickshell/refresh-volume.sh"),      { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && /home/ergin/.config/quickshell/refresh-volume.sh"),     { locked = true, repeating = true })
-hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle && /home/ergin/.config/quickshell/refresh-volume.sh"),   { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("brightnessctl -n2 set 5%+ && /home/ergin/.config/quickshell/refresh-brightness.sh"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl -n2 set 5%- && /home/ergin/.config/quickshell/refresh-brightness.sh"), { locked = true, repeating = true })
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && qs ipc call quickshell refreshVolume"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && qs ipc call quickshell refreshVolume"),      { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && qs ipc call quickshell refreshVolume"),     { locked = true, repeating = true })
+hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle && qs ipc call quickshell refreshVolume"),   { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("brightnessctl -n2 set 5%+ && qs ipc call quickshell refreshBrightness"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl -n2 set 5%- && qs ipc call quickshell refreshBrightness"), { locked = true, repeating = true })
 
 --------------------------------
 ---- WINDOWS AND WORKSPACES ----

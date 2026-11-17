@@ -14,37 +14,10 @@ Item {
     property int brightnessMax: 100
     property int kbdBacklight: 0
     readonly property int kbdBacklightMax: 3
-    property bool nlActive: false
-    property int nlTemp: 4000
+    property bool nlActive: NightLightService.active
+    property int nlTemp: NightLightService.temperature
 
-    property int nlTempPending: 4000
-    property bool nlUpdatePending: false
-
-    Timer {
-        id: nlThrottleTimer
-        interval: 80
-        repeat: true
-        running: false
-        onTriggered: {
-            if (root.nlUpdatePending) {
-                root.nlUpdatePending = false;
-                root.nlSetTemp(root.nlTempPending);
-            } else {
-                nlThrottleTimer.stop();
-            }
-        }
-    }
-
-    function queueNlTemp(t) {
-        root.nlTempPending = t;
-        root.nlTemp = t;
-        if (!nlThrottleTimer.running) {
-            root.nlSetTemp(t);
-            nlThrottleTimer.start();
-        } else {
-            root.nlUpdatePending = true;
-        }
-    }
+    function queueNlTemp(t) { NightLightService.setTemperatureThrottled(t) }
 
     function refreshBrightness() {
         if (brightnessMax > 100)
@@ -100,31 +73,7 @@ Item {
         command: ["true"]
     }
 
-    Process {
-        id: nlCheck
-        command: ["hyprctl", "getoption", "decoration:screen_shader"]
-        stdout: StdioCollector {
-            onStreamFinished: nlActive = this.text.indexOf("nightlight.frag") >= 0
-        }
-    }
-
-    function nlToggle() {
-        Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh"].concat(nlActive ? [] : [String(nlTemp)]));
-        nlStatusTimer.start();
-    }
-
-    function nlSetTemp(t) {
-        nlTemp = t;
-        if (nlActive)
-            Quickshell.execDetached(["/home/ergin/.config/quickshell/toggle-nightlight.sh", String(t)]);
-    }
-
-    Timer {
-        id: nlStatusTimer
-        interval: 300
-        repeat: false
-        onTriggered: nlCheck.running = true
-    }
+    function nlToggle() { NightLightService.toggle() }
 
     function setBrightness(v) {
         root.brightness = v;
@@ -164,7 +113,6 @@ Item {
             if (popup.visible) {
                 refreshBrightness();
                 kbdPoll.running = true;
-                nlCheck.running = true;
             }
         }
     }

@@ -1,5 +1,6 @@
 singleton Theme 1.0 Theme.qml
 singleton DnDManager 1.0 DnDManager.qml
+singleton NightLightService 1.0 NightLightService.qml
 ActiveWindow 1.0 ActiveWindow.qml
 Bar 1.0 Bar.qml
 Battery 1.0 Battery.qml

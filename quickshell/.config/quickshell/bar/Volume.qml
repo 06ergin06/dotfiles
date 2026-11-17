@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell._Window
+import Quickshell.Services.Pipewire
 
 Item {
     id: root
@@ -38,6 +39,29 @@ Item {
 
     function refreshVolume() { sinkPoll.running = true; srcPoll.running = true }
     function refreshStatus() { statusPoll.running = true }
+
+    // Pipewire bildirimleriyle arayüzü canlı tut; dış "refresh" script'ine gerek kalmaz.
+    PwObjectTracker {
+        objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource].filter(Boolean)
+    }
+
+    Connections {
+        target: Pipewire
+        function onDefaultAudioSinkChanged() { root.refreshVolume(); root.refreshStatus() }
+        function onDefaultAudioSourceChanged() { root.refreshVolume(); root.refreshStatus() }
+    }
+
+    Connections {
+        target: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio) || null
+        function onVolumesChanged() { root.refreshVolume() }
+        function onMutedChanged() { root.refreshVolume() }
+    }
+
+    Connections {
+        target: (Pipewire.defaultAudioSource && Pipewire.defaultAudioSource.audio) || null
+        function onVolumesChanged() { root.refreshVolume() }
+        function onMutedChanged() { root.refreshVolume() }
+    }
 
     function pollDevice(proc, volProp, mutedProp, sliderRef) {
         return {

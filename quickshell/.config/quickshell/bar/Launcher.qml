@@ -17,33 +17,24 @@ Item {
             return items;
         var lower = filterText.toLowerCase();
         return items.filter(function (item) {
-            return item.name.toLowerCase().includes(lower) || item.exec.toLowerCase().includes(lower);
+            return item.name.toLowerCase().includes(lower) || item.execString.toLowerCase().includes(lower);
         });
     }
 
-    Process {
-        id: listProcess
-        command: ["/home/ergin/.config/quickshell/list-apps.sh"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.trim().split('\n').filter(function (l) {
-                    return l.trim() !== "";
-                });
-                var result = [];
-                for (var i = 0; i < lines.length; i++) {
-                    var parts = lines[i].split('|');
-                    if (parts.length >= 2) {
-                        result.push({
-                            name: parts[0],
-                            exec: parts[1],
-                            iconPath: parts.length >= 3 ? parts[2] : ""
-                        });
-                    }
-                }
-                root.items = result;
-            }
-        }
+    function reloadItems() {
+        var list = DesktopEntries.applications.values.filter(function (entry) {
+            return entry && entry.name && entry.command.length > 0;
+        });
+        list.sort(function (a, b) { return a.name.localeCompare(b.name); });
+        root.items = list;
     }
+
+    Connections {
+        target: DesktopEntries.applications
+        function onValuesChanged() { root.reloadItems() }
+    }
+
+    Component.onCompleted: root.reloadItems()
 
     OverlayWindow {
         id: overlay
@@ -143,7 +134,7 @@ Item {
                             required property var modelData
                             required property int index
 
-                            width: parent.width
+                            width: itemList.width
                             height: 44
                             radius: 8
                             color: {
@@ -161,9 +152,10 @@ Item {
                                     width: 32; height: 32; radius: 6; color: Theme.background
 
                                     Image {
+                                        id: appIcon
                                         anchors.centerIn: parent
                                         width: 24; height: 24
-                                        source: modelData.iconPath !== "" ? "file://" + modelData.iconPath : ""
+                                        source: modelData.icon !== "" ? Quickshell.iconPath(modelData.icon) : ""
                                         sourceSize.width: 24; sourceSize.height: 24
                                         fillMode: Image.PreserveAspectFit
                                         asynchronous: true
@@ -175,7 +167,7 @@ Item {
                                         text: ""
                                         font.pixelSize: 16
                                         color: Theme.fgMuted
-                                        visible: modelData.iconPath === "" || parent.children[0].status !== Image.Ready
+                                        visible: modelData.icon === "" || appIcon.status !== Image.Ready
                                     }
                                 }
 
@@ -195,7 +187,7 @@ Item {
 
                                     Text {
                                         Layout.fillWidth: true
-                                        text: modelData.exec
+                                        text: modelData.execString
                                         font.pixelSize: 10
                                         color: index === itemList.currentIndex ? Theme.accentFg : Theme.fgMuted
                                         elide: Text.ElideRight
@@ -242,7 +234,6 @@ Item {
     function toggle() {
         overlay.visible = !overlay.visible;
         if (overlay.visible) {
-            listProcess.running = true;
             searchField.text = "";
             root.filterText = "";
             itemList.currentIndex = 0;
@@ -251,7 +242,7 @@ Item {
     }
 
     function launchItem(item) {
-        Quickshell.execDetached(["sh", "-c", item.exec]);
+        item.execute();
         overlay.visible = false;
     }
 }
