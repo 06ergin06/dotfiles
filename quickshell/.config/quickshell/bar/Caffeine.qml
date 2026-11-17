@@ -10,22 +10,25 @@ Item {
 
     property bool active: false
 
+    // Sadece açılışta bir kez kontrol et; sonrasında durum tıklamayla takip edilir.
+    // 2 sn'lik-repeat Timer hem boşa process doğuruyordu hem de eski Qt API
+    // uyarılarına (Process.Buffer / onExited paramsiz) yol açıyordu.
     Process {
         id: checkProcess
         command: ["pidof", "hypridle"]
-        stdout: Process.Buffer
-        onExited: {
-            root.active = (exitCode !== 0); // If pidof fails (exit code 1), hypridle is not running -> active = true
+        onExited: (exitCode, exitStatus) => {
+            root.active = (exitCode !== 0)
         }
     }
 
     Timer {
-        interval: 2000
-        running: true
-        repeat: true
+        id: startupCheck
+        interval: 1000
+        repeat: false
         onTriggered: checkProcess.running = true
-        Component.onCompleted: checkProcess.running = true
     }
+
+    Component.onCompleted: startupCheck.start()
 
     Text {
         anchors.centerIn: parent
