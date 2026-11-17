@@ -125,6 +125,10 @@ Scope {
                                 Bluetooth { id: btItem; anchors.centerIn: parent; barWindow: win }
                             }
                             PillButton {
+                                implicitWidth: cafItem.implicitWidth + Theme.pillPaddingH * 2
+                                Caffeine { id: cafItem; anchors.centerIn: parent }
+                            }
+                            PillButton {
                                 implicitWidth: dndItem.implicitWidth + Theme.pillPaddingH * 2
                                 DoNotDisturb { id: dndItem; anchors.centerIn: parent }
                             }
